@@ -2,12 +2,27 @@ import random
 import string
 from fastapi import FastAPI, File, UploadFile, Request
 from fastapi.responses import JSONResponse, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import hashlib
 import json
 from datetime import datetime
 
 app = FastAPI()
+
+# Allow requests from your Vue.js frontend
+origins = [
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # You can adjust this based on your requirements
+    allow_headers=["*"],  # You can adjust this based on your requirements
+)
 
 UPLOAD_FOLDER = "uploads"
 HASH_FILE_PATH = "file_hashes.json"  # Path to the JSON file storing hashed filenames
