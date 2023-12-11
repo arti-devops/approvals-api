@@ -67,7 +67,7 @@ async def create_upload_file(request: Request, file: UploadFile = File(...)):
 
         # Check if the file with the same hash already exists
         if file_exists_by_hash(file_hash):
-            return JSONResponse(content={"message": "File with the same hash already exists", "hash": file_hash}, status_code=409)
+            return JSONResponse(content={"code":409,"message": "File with the same hash already exists", "hash": file_hash}, status_code=409)
 
         # Generate a new filename
         new_filename = generate_new_filename(file.filename)
@@ -88,9 +88,9 @@ async def create_upload_file(request: Request, file: UploadFile = File(...)):
         # Generate a link to read the uploaded file
         file_link = str(request.url_for("read_uploaded_file", filename=new_filename))
 
-        return JSONResponse(content={"message": "File uploaded successfully", "filename": new_filename, "hash": file_hash, "link": file_link})
+        return JSONResponse(content={"code":200,"message": "File uploaded successfully", "filename": new_filename, "hash": file_hash, "link": file_link})
     except Exception as e:
-        return JSONResponse(content={"message": "Error uploading file", "error": str(e)}, status_code=500)
+        return JSONResponse(content={"code":500,"message": "Error uploading file", "error": str(e)}, status_code=500)
 
 @app.get("/readfile/{filename}")
 async def read_uploaded_file(filename: str):
