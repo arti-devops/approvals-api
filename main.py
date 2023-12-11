@@ -9,7 +9,7 @@ from datetime import datetime
 
 app = FastAPI()
 
-UPLOAD_FOLDER = "/home/uploads"
+UPLOAD_FOLDER = "uploads"
 HASH_FILE_PATH = "file_hashes.json"  # Path to the JSON file storing hashed filenames
 
 # Ensure that the upload folder exists or create it
@@ -50,6 +50,10 @@ def generate_new_filename(original_filename):
     
     return new_filename
 
+@app.get("/ping")
+async def ping():
+    return 'Good.'
+
 @app.post("/uploadfile/")
 async def create_upload_file(request: Request, file: UploadFile = File(...)):
     try:
@@ -63,7 +67,7 @@ async def create_upload_file(request: Request, file: UploadFile = File(...)):
 
         # Check if the file with the same hash already exists
         if file_exists_by_hash(file_hash):
-            return JSONResponse(content={"message": "File with the same hash already exists", "hash": file_hash})
+            return JSONResponse(content={"message": "File with the same hash already exists", "hash": file_hash}, status_code=409)
 
         # Generate a new filename
         new_filename = generate_new_filename(file.filename)
