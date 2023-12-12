@@ -97,6 +97,7 @@ async def create_upload_file(request: Request, file: UploadFile = File(...)):
         file_hash = hash_object.hexdigest()
 
         # Check if the file with the same hash already exists
+        #TODO: Reenable hasj check
 #        if file_exists_by_hash(file_hash):
  #           return JSONResponse(content={"code":409,"message": "File with the same hash already exists", "hash": file_hash}, status_code=409)
 
@@ -144,6 +145,13 @@ async def get_approval_requests(collection=Depends(get_collection)):
         item['_id'] = str(item['_id'])
     return result
 
+@app.get("/approvals/history")
+async def get_approval_requests(collection=Depends(get_collection)):
+    result = list(collection.find({}))
+    for item in result:
+        item['_id'] = str(item['_id'])
+    return result
+
 @app.get("/approvals/{approval_id}")
 async def get_approval_requests(approval_id: str, collection=Depends(get_collection)):
     item = collection.find_one({"_id": ObjectId(approval_id)})
@@ -151,3 +159,11 @@ async def get_approval_requests(approval_id: str, collection=Depends(get_collect
         item["_id"] = str(item["_id"])  # Convert ObjectId to string
         return item
     raise HTTPException(status_code=404, detail="Item not found")
+
+# Update
+@app.put("/approvals/{approval_id}")
+async def update_approval(approval_id: str, updated_approval: dict, collection=Depends(get_collection)):
+    result = collection.update_one({"_id": ObjectId(approval_id)}, {"$set": updated_approval})
+    if result.modified_count == 1:
+        return {"status": "success", "message": "Approval updated"}
+    raise HTTPException(status_code=404, detail="Approval not found")
