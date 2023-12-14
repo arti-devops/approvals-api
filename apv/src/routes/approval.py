@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
 from ..services.mongodb import get_collection
+from auth.src.services.encode_decode import decode_token
 
 approval_router = APIRouter(prefix="/approval", tags=["Approvals management services"])
 
@@ -20,8 +21,8 @@ async def create_approval(item: dict, collection=Depends(get_collection)):
     return {"_id": item_id, **item}
 
 @approval_router.get("/requests")
-async def get_approval_requests(collection=Depends(get_collection)):
-    result = list(collection.find({"status":"pending"}))
+async def get_approval_requests(collection=Depends(get_collection), user=Depends(decode_token)):
+    result = list(collection.find({"status":"pending","createdBy":user["sub"]}))
     for item in result:
         item['_id'] = str(item['_id'])
     return result
