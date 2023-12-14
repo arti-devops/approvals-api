@@ -33,7 +33,7 @@ def process_login(authorization, collection) -> dict:
 
     filename_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Can't read user database file",
+        detail="Can't find user in the database",
         headers={"WWW-Authenticate": "Bearer"},
     )
     
