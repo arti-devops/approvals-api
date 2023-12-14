@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from apv.src.routes.approval import approval_router
 from file.src.routes.upload import upload_router
+from auth.src.routes.auth import auth_router
 
 app = FastAPI()
 
@@ -22,5 +23,6 @@ app.add_middleware(
 )
 
 # Include services
+app.include_router(auth_router)
 app.include_router(upload_router)
 app.include_router(approval_router)
