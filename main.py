@@ -1,13 +1,44 @@
 import random
 import string
-from fastapi import FastAPI, File, UploadFile, Request
+from fastapi import FastAPI, File, UploadFile, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import hashlib
 import json
 from datetime import datetime
+from pymongo import MongoClient
+from datetime import datetime
+from bson import ObjectId
 
 app = FastAPI()
+
+# Allow requests from your Vue.js frontend
+origins = [
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # You can adjust this based on your requirements
+    allow_headers=["*"],  # You can adjust this based on your requirements
+)
+
+# MongoDB configuration
+MONGO_URI = "mongodb://localhost:27017"
+DATABASE_NAME = "approvaldb"
+COLLECTION_NAME = "approvals"
+
+client = MongoClient(MONGO_URI)
+database = client[DATABASE_NAME]
+collection = database[COLLECTION_NAME]
+
+# Dependency to get the MongoDB collection
+def get_collection():
+    return collection
 
 UPLOAD_FOLDER = "uploads"
 HASH_FILE_PATH = "file_hashes.json"  # Path to the JSON file storing hashed filenames
@@ -66,8 +97,9 @@ async def create_upload_file(request: Request, file: UploadFile = File(...)):
         file_hash = hash_object.hexdigest()
 
         # Check if the file with the same hash already exists
-        if file_exists_by_hash(file_hash):
-            return JSONResponse(content={"message": "File with the same hash already exists", "hash": file_hash}, status_code=409)
+        #TODO: Reenable hasj check
+#        if file_exists_by_hash(file_hash):
+ #           return JSONResponse(content={"code":409,"message": "File with the same hash already exists", "hash": file_hash}, status_code=409)
 
         # Generate a new filename
         new_filename = generate_new_filename(file.filename)
@@ -88,11 +120,50 @@ async def create_upload_file(request: Request, file: UploadFile = File(...)):
         # Generate a link to read the uploaded file
         file_link = str(request.url_for("read_uploaded_file", filename=new_filename))
 
-        return JSONResponse(content={"message": "File uploaded successfully", "filename": new_filename, "hash": file_hash, "link": file_link})
+        return JSONResponse(content={"code":200,"message": "File uploaded successfully", "filename": new_filename, "hash": file_hash, "link": file_link})
     except Exception as e:
-        return JSONResponse(content={"message": "Error uploading file", "error": str(e)}, status_code=500)
+        return JSONResponse(content={"code":500,"message": "Error uploading file", "error": str(e)}, status_code=500)
 
 @app.get("/readfile/{filename}")
 async def read_uploaded_file(filename: str):
     file_path = os.path.join(UPLOAD_FOLDER, filename)
     return FileResponse(file_path, filename=filename)
+
+@app.post("/approvals/submit")
+async def create_item(item: dict, collection=Depends(get_collection)):
+    timestamp = datetime.strptime(item['createdAt'], "%Y-%m-%dT%H:%M:%S.%fZ")
+    item['createdAt'] = timestamp
+    result = collection.insert_one(dict(item))
+    item_id = str(result.inserted_id)
+    return {"_id": item_id, **item}
+
+#TODO Result should match to loggedin user
+@app.get("/approvals/requests")
+async def get_approval_requests(collection=Depends(get_collection)):
+    result = list(collection.find({"status":"pending"}))
+    for item in result:
+        item['_id'] = str(item['_id'])
+    return result
+
+@app.get("/approvals/history")
+async def get_approval_requests(collection=Depends(get_collection)):
+    result = list(collection.find({}))
+    for item in result:
+        item['_id'] = str(item['_id'])
+    return result
+
+@app.get("/approvals/{approval_id}")
+async def get_approval_requests(approval_id: str, collection=Depends(get_collection)):
+    item = collection.find_one({"_id": ObjectId(approval_id)})
+    if item:
+        item["_id"] = str(item["_id"])  # Convert ObjectId to string
+        return item
+    raise HTTPException(status_code=404, detail="Item not found")
+
+# Update
+@app.put("/approvals/{approval_id}")
+async def update_approval(approval_id: str, updated_approval: dict, collection=Depends(get_collection)):
+    result = collection.update_one({"_id": ObjectId(approval_id)}, {"$set": updated_approval})
+    if result.modified_count == 1:
+        return {"status": "success", "message": "Approval updated"}
+    raise HTTPException(status_code=404, detail="Approval not found")
