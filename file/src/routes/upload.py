@@ -1,7 +1,7 @@
 #routes/upload.py
 from fastapi import APIRouter, File, UploadFile, Request, HTTPException
 
-from src.services.upload import create_upload_file, read_file
+from ..services.upload import create_upload_file, read_file
 
 upload_router = APIRouter(prefix="/file", tags=["File upload and read services"])
 

@@ -1,11 +1,11 @@
-#routes/approval.py
+#apv/src/routes/approval.py
 from bson import ObjectId
 from datetime import datetime
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from src.services.mongodb import get_collection
+from ..services.mongodb import get_collection
 
 approval_router = APIRouter(prefix="/approval", tags=["Approvals management services"])
 

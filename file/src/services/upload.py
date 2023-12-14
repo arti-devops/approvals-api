@@ -11,7 +11,7 @@ from fastapi import File
 from fastapi import Request, UploadFile
 from fastapi.responses import JSONResponse, FileResponse
 
-from src.services.environnement import env
+from ..services.environnement import env
 
 #TODO Retrive these values via env
 UPLOAD_FOLDER = env("UPLOAD_FOLDER")

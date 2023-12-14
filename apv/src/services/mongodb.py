@@ -1,7 +1,7 @@
 #apv/src/services/mongodb.py
 from pymongo import MongoClient
 
-from src.services.environnement import env
+from ..services.environnement import env
 
 # MongoDB configuration from .env
 MONGO_URI = env("MONGO_URI")
