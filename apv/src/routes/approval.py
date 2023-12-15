@@ -22,14 +22,33 @@ async def create_approval(item: dict, collection=Depends(get_collection)):
 
 @approval_router.get("/requests")
 async def get_approval_requests(collection=Depends(get_collection), user=Depends(decode_token)):
-    result = list(collection.find({"status":"pending","createdBy":user["sub"]}))
+    user_email =  user["sub"]
+    queryCurrentUserRequests = {
+        "$or": [
+            {"createdBy": user_email},
+            {
+                "approvals.userEmail": user_email,
+                "approvals.status": {"$ne": "disapproved"}
+            }
+        ],
+        "status": {"$eq": "pending"}
+    }
+    result = list(collection.find(queryCurrentUserRequests))
     for item in result:
         item['_id'] = str(item['_id'])
     return result
 
 @approval_router.get("/history")
-async def get_approval_requests(collection=Depends(get_collection)):
-    result = list(collection.find({}))
+async def get_approval_requests(collection=Depends(get_collection), user=Depends(decode_token)):
+    user_email =  user["sub"]
+    queryCurrentUserHistory = {
+        "$or": [
+            {"createdBy": user_email},
+            {"approvals.userEmail": user_email}
+        ],
+        "status": {"$ne": "pending"}
+    }
+    result = list(collection.find(queryCurrentUserHistory))
     for item in result:
         item['_id'] = str(item['_id'])
     return result
