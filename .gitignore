@@ -1,6 +1,7 @@
 file/uploads
 file/file_hashes.json
 file/playbook.ipynb
+wdata
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -62,6 +62,17 @@ def read_file(filename: str) -> str:
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
+def read_avatar(username: str) -> str:
+    # The file path
+    file_path = os.path.join(env("AVATARS_FOLDER"), username)
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        return JSONResponse(status_code=404, content={"detail": f"{username} not found in {file_path}"})
+    try:
+        return FileResponse(file_path, filename=username, media_type="image/jpg")
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+
 # Function to be called by the router
 
 async def create_upload_file(request: Request, file: UploadFile = File(...)):

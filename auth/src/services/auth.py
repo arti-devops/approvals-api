@@ -75,7 +75,7 @@ def process_login(authorization, collection) -> dict:
                     "fullName": user["username"],
                     "exp": expiration_time,
                     "role": user["role"],
-                    "avatar": "/images/avatars/avatar-2.png",
+                    "avatar": user["avatar"],
                     "abilities": abilities,
                 }
 
